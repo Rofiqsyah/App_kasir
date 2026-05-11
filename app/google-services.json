@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "27290088320",
+    "firebase_url": "https://kasirapp-project-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "kasirapp-project",
+    "storage_bucket": "kasirapp-project.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:27290088320:android:434b3ba9279be619ddc765",
+        "android_client_info": {
+          "package_name": "com.myapplication.kasir_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeQ9R4NlSrgztdxYb7qB4bIh0H40G5etE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
