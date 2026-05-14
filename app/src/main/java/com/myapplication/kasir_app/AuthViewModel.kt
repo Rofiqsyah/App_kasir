@@ -14,6 +14,9 @@ class AuthViewModel : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState
+    fun resetState() {
+        _authState.value = AuthState.Idle
+    }
 
     private val _currentUser = MutableStateFlow<FirebaseUser?>(auth.currentUser)
     val currentUserFlow: StateFlow<FirebaseUser?> = _currentUser

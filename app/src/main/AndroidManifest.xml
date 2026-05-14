@@ -19,6 +19,9 @@
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Kasir_Apk" >
+=======
+            android:theme="@style/Theme.Kasir_Apk">
+>>>>>>> d2eec5cb067c550db5016231650c3625f164bff2
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

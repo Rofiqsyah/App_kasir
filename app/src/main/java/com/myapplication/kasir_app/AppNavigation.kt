@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.myapplication.kasir_app.ui.auth.LoginScreen
 import com.myapplication.kasir_app.ui.auth.RegisterScreen
+import com.myapplication.kasir_app.ui.dashboard.DashboardScreen
 
 @Composable
 fun AppNavigation() {
@@ -25,8 +26,13 @@ fun AppNavigation() {
             )
         }
         composable("home") {
-            // Placeholder for home screen
-            HomeScreen(onLogout = { navController.navigate("login") { popUpTo("home") { inclusive = true } } })
+            DashboardScreen(
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
