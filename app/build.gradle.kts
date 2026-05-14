@@ -11,6 +11,16 @@ android {
 
     defaultConfig {
         applicationId = "com.myapplication.kasir_app"
+=======
+}
+
+android {
+    namespace = "com.myapplication.kasir_apk"
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = "com.myapplication.kasir_apk"
+>>>>>>> d2eec5cb067c550db5016231650c3625f164bff2
         minSdk = 26
         targetSdk = 36
         versionCode = 1
