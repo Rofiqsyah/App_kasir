@@ -1,5 +1,4 @@
-plugins {
-    alias(libs.plugins.android.application)
+plugins {alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
@@ -11,16 +10,6 @@ android {
 
     defaultConfig {
         applicationId = "com.myapplication.kasir_app"
-=======
-}
-
-android {
-    namespace = "com.myapplication.kasir_apk"
-    compileSdk = 36
-
-    defaultConfig {
-        applicationId = "com.myapplication.kasir_apk"
->>>>>>> d2eec5cb067c550db5016231650c3625f164bff2
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -54,33 +43,36 @@ android {
 }
 
 dependencies {
-
+    // Core Android & Compose
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
 
+    // Compose BOM & UI
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation("androidx.compose.material:material-icons-extended")
 
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
-    implementation("androidx.navigation:navigation-compose:2.7.x")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.x")
-    implementation ("androidx.compose.material:material-icons-extended")
+    implementation("com.google.firebase:firebase-firestore-ktx")
 
+    // Navigation & Lifecycle
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
+    // Test dependencies
     testImplementation(libs.junit)
-
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 
+    // Debug dependencies
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

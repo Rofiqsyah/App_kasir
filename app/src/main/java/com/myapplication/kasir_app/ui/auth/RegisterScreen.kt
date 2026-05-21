@@ -19,6 +19,7 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var selectedRole by remember { mutableStateOf("kasir") } // Default kasir
 
     val authState by viewModel.authState.collectAsState()
 
@@ -35,7 +36,29 @@ fun RegisterScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Register", style = MaterialTheme.typography.headlineMedium)
+        Text(text = "Register Akun Baru", style = MaterialTheme.typography.headlineMedium)
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Pemilihan Role
+        Text(text = "Daftar Sebagai:", style = MaterialTheme.typography.bodyMedium)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RadioButton(
+                selected = selectedRole == "owner",
+                onClick = { selectedRole = "owner" }
+            )
+            Text("Owner")
+            Spacer(modifier = Modifier.width(16.dp))
+            RadioButton(
+                selected = selectedRole == "kasir",
+                onClick = { selectedRole = "kasir" }
+            )
+            Text("Kasir")
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -43,7 +66,8 @@ fun RegisterScreen(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -53,7 +77,8 @@ fun RegisterScreen(
             onValueChange = { password = it },
             label = { Text("Password") },
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -63,7 +88,8 @@ fun RegisterScreen(
             onValueChange = { confirmPassword = it },
             label = { Text("Confirm Password") },
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -71,13 +97,13 @@ fun RegisterScreen(
         Button(
             onClick = {
                 if (password == confirmPassword) {
-                    viewModel.register(email, password)
-                } else {
-                    // Handle password mismatch
+                    viewModel.register(email, password, selectedRole)
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = authState !is AuthViewModel.AuthState.Loading && password == confirmPassword
+            enabled = authState !is AuthViewModel.AuthState.Loading && 
+                      password.isNotEmpty() && 
+                      password == confirmPassword
         ) {
             if (authState is AuthViewModel.AuthState.Loading) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp))
@@ -89,7 +115,7 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         TextButton(onClick = onNavigateToLogin) {
-            Text("Already have an account? Login")
+            Text("Sudah punya akun? Login")
         }
 
         Spacer(modifier = Modifier.height(16.dp))

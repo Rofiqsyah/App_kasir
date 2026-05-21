@@ -8,12 +8,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.myapplication.kasir_app.AuthViewModel
-import kotlinx.coroutines.flow.collect
 
 @Composable
 fun LoginScreen(
@@ -21,220 +22,112 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     viewModel: AuthViewModel = viewModel()
 ) {
-
-    var email by remember {
-        mutableStateOf("")
-    }
-
-    var password by remember {
-        mutableStateOf("")
-    }
-
-    // STATUS LIHAT PASSWORD
-    var passwordVisible by remember {
-        mutableStateOf(false)
-    }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
 
     val authState by viewModel.authState.collectAsState()
+    val currentUser by viewModel.currentUserFlow.collectAsState()
+    val justLoggedOut by viewModel.justLoggedOut.collectAsState()
+    val userRole by viewModel.userRole.collectAsState()
 
-    // AUTO LOGIN JIKA USER SUDAH LOGIN
-    LaunchedEffect(Unit) {
-
-        viewModel.currentUserFlow.collect { user ->
-
-            if (user != null) {
-
-                onLoginSuccess()
-
-            }
-
+    // Auto-login: Langsung masuk jika sudah ada sesi aktif dan role sudah dimuat
+    LaunchedEffect(currentUser, justLoggedOut, userRole) {
+        if (currentUser != null && !justLoggedOut && userRole.isNotEmpty()) {
+            onLoginSuccess()
         }
+    }
 
+    // Navigasi setelah tombol Login ditekan dan berhasil
+    LaunchedEffect(authState) {
+        if (authState is AuthViewModel.AuthState.Success) {
+            onLoginSuccess()
+            viewModel.resetState()
+        }
     }
 
     Column(
-
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-
+            .padding(24.dp),
         verticalArrangement = Arrangement.Center,
-
         horizontalAlignment = Alignment.CenterHorizontally
-
     ) {
-
-        // JUDUL
         Text(
-            text = "Login",
-            style = MaterialTheme.typography.headlineMedium
+            text = "Kasir App",
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        
+        Text(
+            text = "Silakan login untuk melanjutkan",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
-        // EMAIL
         OutlinedTextField(
-
             value = email,
-
-            onValueChange = {
-                email = it
-            },
-
-            label = {
-                Text("Email")
-            },
-
+            onValueChange = { email = it },
+            label = { Text("Email") },
             modifier = Modifier.fillMaxWidth(),
-
-            singleLine = true
-
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // PASSWORD
-        OutlinedTextField(
-
-            value = password,
-
-            onValueChange = {
-                password = it
-            },
-
-            label = {
-                Text("Password")
-            },
-
-            modifier = Modifier.fillMaxWidth(),
-
             singleLine = true,
-
-            visualTransformation =
-
-                if (passwordVisible)
-                    VisualTransformation.None
-                else
-                    PasswordVisualTransformation(),
-
-            trailingIcon = {
-
-                IconButton(
-
-                    onClick = {
-
-                        passwordVisible =
-                            !passwordVisible
-
-                    }
-
-                ) {
-
-                    Icon(
-
-                        imageVector =
-
-                            if (passwordVisible)
-                                Icons.Outlined.Visibility
-                            else
-                                Icons.Outlined.VisibilityOff,
-
-                        contentDescription =
-                            "Toggle Password"
-
-                    )
-
-                }
-
-            }
-
+            shape = MaterialTheme.shapes.medium
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // BUTTON LOGIN
-        Button(
-
-            onClick = {
-
-                viewModel.login(
-                    email,
-                    password
-                )
-
-            },
-
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
             modifier = Modifier.fillMaxWidth(),
-
-            enabled =
-                authState !is AuthViewModel.AuthState.Loading
-
-        ) {
-
-            if (authState is AuthViewModel.AuthState.Loading) {
-
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp)
-                )
-
-            } else {
-
-                Text("Login")
-
+            singleLine = true,
+            shape = MaterialTheme.shapes.medium,
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                        contentDescription = null
+                    )
+                }
             }
+        )
 
-        }
+        Spacer(modifier = Modifier.height(24.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // REGISTER
-        TextButton(
-            onClick = onNavigateToRegister
+        Button(
+            onClick = {
+                viewModel.clearLogoutFlag()
+                viewModel.login(email, password)
+            },
+            modifier = Modifier.fillMaxWidth().height(50.dp),
+            enabled = authState !is AuthViewModel.AuthState.Loading,
+            shape = MaterialTheme.shapes.medium
         ) {
-
-            Text(
-                "Don't have an account? Register"
-            )
-
+            if (authState is AuthViewModel.AuthState.Loading) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+            } else {
+                Text("Login", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // ERROR / SUCCESS
-        when (authState) {
-
-            is AuthViewModel.AuthState.Error -> {
-
-                Text(
-
-                    text =
-                        (authState as AuthViewModel.AuthState.Error).message,
-
-                    color =
-                        MaterialTheme.colorScheme.error
-
-                )
-
-            }
-
-            is AuthViewModel.AuthState.Success -> {
-
-                Text(
-
-                    text =
-                        (authState as AuthViewModel.AuthState.Success).message,
-
-                    color =
-                        MaterialTheme.colorScheme.primary
-
-                )
-
-            }
-
-            else -> {}
-
+        TextButton(onClick = onNavigateToRegister) {
+            Text("Belum punya akun? Daftar sekarang")
         }
 
+        if (authState is AuthViewModel.AuthState.Error) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = (authState as AuthViewModel.AuthState.Error).message,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
     }
-
 }
