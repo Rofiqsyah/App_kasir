@@ -13,6 +13,7 @@ import kotlinx.coroutines.tasks.await
 class AuthViewModel : ViewModel() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val allowedRoles = setOf("owner", "kasir")
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState
@@ -34,7 +35,6 @@ class AuthViewModel : ViewModel() {
             val user = firebaseAuth.currentUser
             _currentUser.value = user
             if (user != null) {
-                // Otomatis ambil role saat user terdeteksi (untuk auto-login)
                 fetchUserRole(user.uid)
             }
         }
@@ -44,9 +44,11 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val doc = db.collection("users").document(uid).get().await()
-                _userRole.value = doc.getString("role") ?: "kasir"
+                if (doc.exists()) {
+                    _userRole.value = doc.getString("role") ?: ""
+                }
             } catch (e: Exception) {
-                _userRole.value = "kasir"
+                _userRole.value = ""
             }
         }
     }
@@ -59,50 +61,34 @@ class AuthViewModel : ViewModel() {
         _justLoggedOut.value = false
     }
 
-    fun setRole(role: String) {
-        _userRole.value = role
-    }
-
     fun login(email: String, password: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
-                val result = auth.signInWithEmailAndPassword(email, password).await()
+                val cleanEmail = email.trim()
+                val result = auth.signInWithEmailAndPassword(cleanEmail, password).await()
                 val uid = result.user?.uid ?: ""
 
-                // Ambil role dari Firestore
                 val doc = db.collection("users").document(uid).get().await()
-                val role = doc.getString("role") ?: "kasir"
+                val role = doc.getString("role") ?: ""
 
-                _justLoggedOut.value = false
-                _loggedInEmail.value = email.trim()
-                _userRole.value = role
-                _authState.value = AuthState.Success("Login successful")
-            } catch (e: Exception) {
-                _authState.value = AuthState.Error(e.message ?: "Login failed")
-            }
-        }
-    }
-
-    fun register(email: String, password: String, role: String = "kasir") {
-        viewModelScope.launch {
-            _authState.value = AuthState.Loading
-            try {
-                val result = auth.createUserWithEmailAndPassword(email, password).await()
-                val uid = result.user?.uid ?: ""
-
-                // Simpan role sesuai input saat register
-                db.collection("users").document(uid).set(
-                    mapOf(
-                        "email" to email.trim(),
-                        "role" to role
+                if (!doc.exists() || role !in allowedRoles) {
+                    auth.signOut()
+                    _currentUser.value = null
+                    _userRole.value = ""
+                    _authState.value = AuthState.Error(
+                        "Akun belum punya role kasir/owner. Set role di Firestore."
                     )
-                ).await()
+                    return@launch
+                }
 
                 _justLoggedOut.value = false
-                _authState.value = AuthState.Success("Registration successful")
+                _loggedInEmail.value = cleanEmail
+                _userRole.value = role
+                _authState.value = AuthState.Success("Berhasil masuk sebagai $role")
+
             } catch (e: Exception) {
-                _authState.value = AuthState.Error(e.message ?: "Registration failed")
+                _authState.value = AuthState.Error(e.message ?: "Login gagal")
             }
         }
     }

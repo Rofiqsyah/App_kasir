@@ -1,5 +1,6 @@
 package com.myapplication.kasir_app.ui.owner
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,11 +10,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.firestore.FirebaseFirestore
 
 data class DataKasir(
     val id: String = "",
@@ -24,18 +27,38 @@ data class DataKasir(
 
 @Composable
 fun KelolakasirPanel() {
-    // Menggunakan data lokal (bukan Firebase) agar langsung tampil
-    var listKasir by remember { 
-        mutableStateOf(listOf(
-            DataKasir("1", "Rina Wati", "rina@kasir.id", true),
-            DataKasir("2", "Doni Prasetyo", "doni@kasir.id", true),
-            DataKasir("3", "Siti Aminah", "siti@kasir.id", false)
-        )) 
-    }
+    val context = LocalContext.current
+    val db = FirebaseFirestore.getInstance()
+    var listKasir by remember { mutableStateOf(listOf<DataKasir>()) }
 
     var showDialog by remember { mutableStateOf(false) }
     var editKasir by remember { mutableStateOf<DataKasir?>(null) }
     var showDeleteDialog by remember { mutableStateOf<DataKasir?>(null) }
+
+    DisposableEffect(Unit) {
+        val registration = db.collection("users")
+            .whereEqualTo("role", "kasir")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Toast.makeText(context, "Gagal load kasir: ${error.localizedMessage}", Toast.LENGTH_LONG).show()
+                    android.util.Log.e("Firestore", "Gagal load kasir", error)
+                    return@addSnapshotListener
+                }
+
+                listKasir = snapshot?.documents.orEmpty().map { doc ->
+                    DataKasir(
+                        id = doc.id,
+                        nama = doc.getString("nama") ?: doc.getString("name") ?: "Kasir",
+                        email = doc.getString("email") ?: "-",
+                        aktif = doc.getBoolean("aktif") ?: true
+                    )
+                }.sortedBy { it.email }
+            }
+
+        onDispose {
+            registration.remove()
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("Kelola Kasir (${listKasir.size})", fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -47,10 +70,12 @@ fun KelolakasirPanel() {
                     kasir = kasir,
                     onEdit = { editKasir = kasir; showDialog = true },
                     onDelete = { showDeleteDialog = kasir },
-                    onToggleAktif = { 
-                        listKasir = listKasir.map { 
-                            if (it.id == kasir.id) it.copy(aktif = !it.aktif) else it 
-                        }
+                    onToggleAktif = {
+                        db.collection("users").document(kasir.id)
+                            .update("aktif", !kasir.aktif)
+                            .addOnFailureListener {
+                                Toast.makeText(context, "Gagal update status kasir", Toast.LENGTH_LONG).show()
+                            }
                     }
                 )
             }
@@ -73,9 +98,30 @@ fun KelolakasirPanel() {
             onDismiss = { showDialog = false },
             onSave = { nama, email ->
                 if (editKasir != null) {
-                    listKasir = listKasir.map { if (it.id == editKasir!!.id) it.copy(nama = nama, email = email) else it }
+                    db.collection("users").document(editKasir!!.id)
+                        .update(
+                            mapOf(
+                                "nama" to nama,
+                                "email" to email,
+                                "role" to "kasir"
+                            )
+                        )
+                        .addOnFailureListener {
+                            Toast.makeText(context, "Gagal update kasir", Toast.LENGTH_LONG).show()
+                        }
                 } else {
-                    listKasir = listKasir + DataKasir(System.currentTimeMillis().toString(), nama, email, true)
+                    val newKasir = hashMapOf(
+                        "nama" to nama,
+                        "email" to email,
+                        "role" to "kasir",
+                        "aktif" to true
+                    )
+
+                    db.collection("users")
+                        .add(newKasir)
+                        .addOnFailureListener {
+                            Toast.makeText(context, "Gagal tambah kasir", Toast.LENGTH_LONG).show()
+                        }
                 }
                 showDialog = false
             }
@@ -89,7 +135,11 @@ fun KelolakasirPanel() {
             text = { Text("Yakin ingin menghapus ${kasir.nama}?") },
             confirmButton = {
                 TextButton(onClick = { 
-                    listKasir = listKasir.filter { it.id != kasir.id }
+                    db.collection("users").document(kasir.id)
+                        .delete()
+                        .addOnFailureListener {
+                            Toast.makeText(context, "Gagal hapus kasir", Toast.LENGTH_LONG).show()
+                        }
                     showDeleteDialog = null 
                 }) { Text("Hapus", color = MaterialTheme.colorScheme.error) }
             },

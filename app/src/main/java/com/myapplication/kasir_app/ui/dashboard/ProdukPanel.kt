@@ -1,24 +1,31 @@
 package com.myapplication.kasir_app.ui.dashboard
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.myapplication.kasir_app.R
 
 data class Produk(
     val id: String,
     val nama: String,
     val kategori: String,
     val harga: String,
+    val gambar: Int,
     val stok: Int,
     val stokMinimum: Int = 5
 )
@@ -38,7 +45,6 @@ fun ProdukPanel() {
         mutableStateOf<Produk?>(null)
     }
 
-    // POPUP HAPUS
     var produkAkanDihapus by remember {
         mutableStateOf<Produk?>(null)
     }
@@ -47,27 +53,152 @@ fun ProdukPanel() {
 
         mutableStateListOf(
 
-            // MENU KOPI
-            Produk("1", "Americano", "Kopi", "Rp 10.000", 20),
-            Produk("2", "Espresso", "Kopi", "Rp 10.000", 15),
-            Produk("3", "Cappuccino", "Kopi", "Rp 15.000", 18),
-            Produk("4", "Coffee Latte", "Kopi", "Rp 15.000", 12),
-            Produk("5", "Caramel Macchiato", "Kopi", "Rp 18.000", 10),
-            Produk("6", "Es Kopi Susu", "Kopi", "Rp 18.000", 25),
-            Produk("7", "Kopi Susu Gula Aren", "Kopi", "Rp 18.000", 30),
-            Produk("8", "Majapahit Black Coffee", "Kopi", "Rp 5.000", 40),
-            Produk("9", "Majapahit Milk Coffee", "Kopi", "Rp 6.000", 35),
+            // KOPI
+            Produk(
+                "1",
+                "Americano",
+                "Kopi",
+                "Rp 10.000",
+                R.drawable.americano,
+                20
+            ),
+
+            Produk(
+                "2",
+                "Espresso",
+                "Kopi",
+                "Rp 10.000",
+                R.drawable.espresso,
+                15
+            ),
+
+            Produk(
+                "3",
+                "Cappuccino",
+                "Kopi",
+                "Rp 15.000",
+                R.drawable.cappucino,
+                18
+            ),
+
+            Produk(
+                "4",
+                "Coffee Latte",
+                "Kopi",
+                "Rp 15.000",
+                R.drawable.coffee_latte,
+                12
+            ),
+
+            Produk(
+                "5",
+                "Caramel Macchiato",
+                "Kopi",
+                "Rp 18.000",
+                R.drawable.caramel_macciato,
+                10
+            ),
+
+            Produk(
+                "6",
+                "Es Kopi Susu",
+                "Kopi",
+                "Rp 18.000",
+                R.drawable.es_kopisusu,
+                25
+            ),
+
+            Produk(
+                "7",
+                "Kopi Susu Gula Aren",
+                "Kopi",
+                "Rp 18.000",
+                R.drawable.kopisusu_gulaaren,
+                30
+            ),
+
+            Produk(
+                "8",
+                "Majapahit Black Coffee",
+                "Kopi",
+                "Rp 5.000",
+                R.drawable.majapahit_blackcoffee,
+                40
+            ),
+
+            Produk(
+                "9",
+                "Majapahit Milk Coffee",
+                "Kopi",
+                "Rp 6.000",
+                R.drawable.majapahit_milkcoffee,
+                35
+            ),
 
             // NON KOPI
-            Produk("10", "Coklat", "Non Kopi", "Rp 10.000", 12),
-            Produk("11", "Milk Tea", "Non Kopi", "Rp 10.000", 20),
-            Produk("12", "Lemon Tea", "Non Kopi", "Rp 6.000", 8),
+            Produk(
+                "10",
+                "Coklat",
+                "Non Kopi",
+                "Rp 10.000",
+                R.drawable.chocolate,
+                12
+            ),
+
+            Produk(
+                "11",
+                "Milk Tea",
+                "Non Kopi",
+                "Rp 10.000",
+                R.drawable.milk_tea,
+                20
+            ),
+
+            Produk(
+                "12",
+                "Lemon Tea",
+                "Non Kopi",
+                "Rp 6.000",
+                R.drawable.lemon_tea,
+                8
+            ),
 
             // CEMILAN
-            Produk("13", "Oreo Lava Toast", "Cemilan", "Rp 10.000", 15),
-            Produk("14", "Lotus Biscoff Lava Toast", "Cemilan", "Rp 12.000", 10),
-            Produk("15", "Chocolate Lava Toast", "Cemilan", "Rp 10.000", 9),
-            Produk("16", "Cheese Chocolate Lava Toast", "Cemilan", "Rp 15.000", 7)
+            Produk(
+                "13",
+                "Oreo Lava Toast",
+                "Cemilan",
+                "Rp 10.000",
+                R.drawable.orea_lavatoast,
+                15
+            ),
+
+            Produk(
+                "14",
+                "Lotus Biscoff Lava Toast",
+                "Cemilan",
+                "Rp 12.000",
+                R.drawable.lotusbiscoff_lavatoast,
+                10
+            ),
+
+            Produk(
+                "15",
+                "Chocolate Lava Toast",
+                "Cemilan",
+                "Rp 10.000",
+                R.drawable.chocolate_lavatoast,
+                9
+            ),
+
+            Produk(
+                "16",
+                "Cheese Chocolate Lava Toast",
+                "Cemilan",
+                "Rp 15.000",
+                R.drawable.cheese_chocolate_lavatoast,
+                7
+            )
 
         )
 
@@ -236,6 +367,7 @@ fun ProdukPanel() {
                             nama = nama,
                             kategori = kategori,
                             harga = harga,
+                            gambar = R.drawable.americano,
                             stok = stok
                         )
 
@@ -342,48 +474,26 @@ fun ProdukCard(
             modifier = Modifier.padding(12.dp)
         ) {
 
-            Surface(
+            // GAMBAR PRODUK
+            Image(
+
+                painter =
+                    painterResource(id = produk.gambar),
+
+                contentDescription =
+                    produk.nama,
 
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(70.dp),
+                    .height(120.dp)
+                    .clip(
+                        RoundedCornerShape(12.dp)
+                    ),
 
-                color =
-                    MaterialTheme.colorScheme.surfaceVariant,
+                contentScale =
+                    ContentScale.Crop
 
-                shape =
-                    MaterialTheme.shapes.medium
-
-            ) {
-
-                Box(
-                    contentAlignment = Alignment.Center
-                ) {
-
-                    Icon(
-
-                        imageVector = when (produk.kategori) {
-
-                            "Kopi" ->
-                                Icons.Outlined.Coffee
-
-                            "Non Kopi" ->
-                                Icons.Outlined.LocalDrink
-
-                            else ->
-                                Icons.Outlined.Fastfood
-
-                        },
-
-                        contentDescription = null,
-
-                        modifier = Modifier.size(30.dp)
-
-                    )
-
-                }
-
-            }
+            )
 
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -542,7 +652,9 @@ fun ProdukDialog(
     }
 
     var stok by remember {
-        mutableStateOf(produk?.stok?.toString() ?: "")
+        mutableStateOf(
+            produk?.stok?.toString() ?: ""
+        )
     }
 
     AlertDialog(
@@ -552,10 +664,14 @@ fun ProdukDialog(
         title = {
 
             Text(
-                if (produk == null)
-                    "Tambah Produk"
-                else
-                    "Edit Produk"
+
+                text =
+
+                    if (produk == null)
+                        "Tambah Produk"
+                    else
+                        "Edit Produk"
+
             )
 
         },
@@ -563,36 +679,78 @@ fun ProdukDialog(
         text = {
 
             Column(
+
                 verticalArrangement =
                     Arrangement.spacedBy(10.dp)
+
             ) {
 
                 OutlinedTextField(
+
                     value = nama,
-                    onValueChange = { nama = it },
-                    label = { Text("Nama Produk") },
-                    modifier = Modifier.fillMaxWidth()
+
+                    onValueChange = {
+                        nama = it
+                    },
+
+                    label = {
+                        Text("Nama Produk")
+                    },
+
+                    modifier =
+                        Modifier.fillMaxWidth()
+
                 )
 
                 OutlinedTextField(
+
                     value = kategori,
-                    onValueChange = { kategori = it },
-                    label = { Text("Kategori") },
-                    modifier = Modifier.fillMaxWidth()
+
+                    onValueChange = {
+                        kategori = it
+                    },
+
+                    label = {
+                        Text("Kategori")
+                    },
+
+                    modifier =
+                        Modifier.fillMaxWidth()
+
                 )
 
                 OutlinedTextField(
+
                     value = harga,
-                    onValueChange = { harga = it },
-                    label = { Text("Harga") },
-                    modifier = Modifier.fillMaxWidth()
+
+                    onValueChange = {
+                        harga = it
+                    },
+
+                    label = {
+                        Text("Harga")
+                    },
+
+                    modifier =
+                        Modifier.fillMaxWidth()
+
                 )
 
                 OutlinedTextField(
+
                     value = stok,
-                    onValueChange = { stok = it },
-                    label = { Text("Stok") },
-                    modifier = Modifier.fillMaxWidth()
+
+                    onValueChange = {
+                        stok = it
+                    },
+
+                    label = {
+                        Text("Stok")
+                    },
+
+                    modifier =
+                        Modifier.fillMaxWidth()
+
                 )
 
             }
@@ -606,15 +764,19 @@ fun ProdukDialog(
                 onClick = {
 
                     if (
+
                         nama.isNotBlank() &&
                         harga.isNotBlank()
+
                     ) {
 
                         onSave(
+
                             nama,
                             kategori,
                             harga,
                             stok.toIntOrNull() ?: 0
+
                         )
 
                     }
@@ -632,7 +794,9 @@ fun ProdukDialog(
         dismissButton = {
 
             TextButton(
+
                 onClick = onDismiss
+
             ) {
 
                 Text("Batal")
