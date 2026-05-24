@@ -8,7 +8,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.myapplication.kasir_app.ui.auth.LoginScreen
-import com.myapplication.kasir_app.ui.auth.RegisterScreen
 import com.myapplication.kasir_app.ui.dashboard.DashboardScreen
 import com.myapplication.kasir_app.ui.owner.OwnerDashboardScreen
 
@@ -35,19 +34,7 @@ fun AppNavigation() {
                             popUpTo("login") { inclusive = true }
                         }
                     }
-                    // Jika role masih kosong, LoginScreen akan menunggu 
-                    // karena ada LaunchedEffect yang memantau userRole.
-                },
-                onNavigateToRegister = {
-                    navController.navigate("register")
                 }
-            )
-        }
-
-        composable("register") {
-            RegisterScreen(
-                onRegisterSuccess = { navController.navigate("login") },
-                onNavigateToLogin = { navController.navigate("login") }
             )
         }
 

@@ -13,64 +13,53 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LaporanPanel() {
+    val db = FirebaseFirestore.getInstance()
     var selectedFilter by remember { mutableStateOf("Harian") }
-    var showDatePicker by remember { mutableStateOf(false) }
-    var customDateRange by remember { mutableStateOf("Pilih Tanggal") }
     
-    // Data Statistik Dinamis
-    val summaryData = remember(selectedFilter) {
-        when(selectedFilter) {
-            "Harian" -> Pair("Rp 1.250.000", "15")
-            "Mingguan" -> Pair("Rp 8.450.000", "112")
-            "Bulanan" -> Pair("Rp 32.150.000", "456")
-            else -> Pair("Rp 4.200.000", "38")
-        }
-    }
+    // State untuk data dari Firestore
+    var totalPenjualan by remember { mutableStateOf(0) }
+    var totalTransaksi by remember { mutableStateOf(0) }
+    var bestSellerList by remember { mutableStateOf(listOf<Triple<String, String, Int>>()) }
+    var isLoading by remember { mutableStateOf(true) }
 
-    // Data Produk Terlaris Dinamis (Samakan dengan Dashboard)
-    val bestSeller = remember(selectedFilter) {
-        when(selectedFilter) {
-            "Harian" -> listOf(
-                Triple("Americano", "Kopi", 12),
-                Triple("Es Teh Manis", "Non Kopi", 20)
-            )
-            "Mingguan" -> listOf(
-                Triple("Americano", "Kopi", 48),
-                Triple("Cappuccino", "Kopi", 37),
-                Triple("Milk Tea", "Non Kopi", 29)
-            )
-            "Bulanan" -> listOf(
-                Triple("Americano", "Kopi", 185),
-                Triple("Cappuccino", "Kopi", 142),
-                Triple("Milk Tea", "Non Kopi", 115),
-                Triple("Ayam Bakar", "Makanan", 98)
-            )
-            else -> listOf(
-                Triple("Americano", "Kopi", 25),
-                Triple("Milk Tea", "Non Kopi", 18)
-            )
-        }
-    }
+    // Ambil data dari Firestore secara Realtime
+    LaunchedEffect(selectedFilter) {
+        isLoading = true
+        db.collection("transactions")
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null || snapshot == null) {
+                    isLoading = false
+                    return@addSnapshotListener
+                }
 
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState()
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = { 
-                    customDateRange = "10 Mei 2026 - 19 Mei 2026"
-                    selectedFilter = "Custom"
-                    showDatePicker = false 
-                }) { Text("Pilih") }
+                val docs = snapshot.documents
+                totalTransaksi = docs.size
+                totalPenjualan = docs.sumOf { it.getLong("totalBayar")?.toInt() ?: 0 }
+
+                // Hitung Produk Terlaris
+                val counts = mutableMapOf<String, Int>()
+                docs.forEach { doc ->
+                    val nama = doc.getString("menuTerlaris") ?: ""
+                    val qty = doc.getLong("qtyTerjual")?.toInt() ?: 0
+                    if (nama.isNotEmpty() && nama != "-") {
+                        counts[nama] = (counts[nama] ?: 0) + qty
+                    }
+                }
+
+                bestSellerList = counts.map { 
+                    Triple(it.key, "Menu Favorit", it.value) 
+                }.sortedByDescending { it.third }
+                
+                isLoading = false
             }
-        ) {
-            DatePicker(state = datePickerState)
-        }
     }
 
     Column(
@@ -84,65 +73,56 @@ fun LaporanPanel() {
         ) {
             listOf("Harian", "Minggu", "Bulan", "Custom").forEach { filter ->
                 FilterChip(
-                    selected = selectedFilter == filter || (selectedFilter == "Mingguan" && filter == "Minggu") || (selectedFilter == "Bulanan" && filter == "Bulan"),
-                    onClick = { 
-                        if (filter == "Custom") {
-                            showDatePicker = true 
-                        } else {
-                            selectedFilter = when(filter) {
-                                "Minggu" -> "Mingguan"
-                                "Bulan" -> "Bulanan"
-                                else -> filter
-                            }
-                        }
-                    },
-                    label = { 
-                        Text(
-                            text = filter,
-                            fontSize = 12.sp,
-                            maxLines = 1
-                        ) 
-                    },
+                    selected = selectedFilter == filter,
+                    onClick = { selectedFilter = filter },
+                    label = { Text(filter, fontSize = 12.sp) },
                     modifier = Modifier.weight(1f)
                 )
             }
         }
 
-        if (selectedFilter == "Custom") {
-            Text("Rentang: $customDateRange", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
-        }
-
         Text("Ringkasan $selectedFilter", fontWeight = FontWeight.Bold)
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            SummaryItem("Total Penjualan", summaryData.first, Icons.Outlined.Payments, Modifier.weight(1f))
-            SummaryItem("Transaksi", summaryData.second, Icons.Outlined.ReceiptLong, Modifier.weight(1f))
+        if (isLoading) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        } else {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                SummaryItem("Total Penjualan", "Rp $totalPenjualan", Icons.Outlined.Payments, Modifier.weight(1f))
+                SummaryItem("Transaksi", "$totalTransaksi", Icons.Outlined.ReceiptLong, Modifier.weight(1f))
+            }
         }
 
-        // BAGIAN PRODUK TERLARIS - DISAMAKAN DENGAN DASHBOARD
         Text("Produk Terlaris", fontWeight = FontWeight.Bold, fontSize = 18.sp)
         Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                val maxVal = if (bestSeller.isNotEmpty()) bestSeller.maxOf { it.third }.toFloat() else 1f
-                
-                bestSeller.forEach { (nama, kategori, qty) ->
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(nama, fontWeight = FontWeight.Bold)
-                                Text(kategori, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                if (bestSellerList.isEmpty() && !isLoading) {
+                    Text(
+                        "Belum ada data transaksi.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                } else {
+                    val maxVal = if(bestSellerList.isNotEmpty()) bestSellerList.maxOf { it.third }.toFloat() else 1f
+                    bestSellerList.forEach { (nama, kategori, qty) ->
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(nama, fontWeight = FontWeight.Bold)
+                                    Text(kategori, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                Text("$qty" + "x", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                             }
-                            Text("$qty" + "x", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            LinearProgressIndicator(
+                                progress = { qty.toFloat() / maxVal },
+                                modifier = Modifier.fillMaxWidth().height(4.dp),
+                                strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        LinearProgressIndicator(
-                            progress = { qty.toFloat() / maxVal },
-                            modifier = Modifier.fillMaxWidth().height(4.dp),
-                            strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
             }

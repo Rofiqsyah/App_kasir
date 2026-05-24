@@ -1,24 +1,31 @@
 package com.myapplication.kasir_app.ui.dashboard
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AddShoppingCart
-import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.Receipt
+import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.myapplication.kasir_app.R
 
 data class ProdukKasir(
     val nama: String,
-    val harga: Int
+    val harga: Int,
+    val gambar: Int
 )
 
 data class KeranjangItem(
@@ -28,56 +35,133 @@ data class KeranjangItem(
 )
 
 @Composable
-fun TransaksiPanel() {
+fun TransaksiPanel(
 
-    // MENU
+    onTransaksiSelesai: (
+        totalBayar: Int,
+        menuTerlaris: String,
+        qtyTerjual: Int
+    ) -> Unit
+
+) {
+
+    // ==========================
+    // DAFTAR MENU
+    // ==========================
     val daftarProduk = listOf(
 
         // KOPI
-        ProdukKasir("Americano", 10000),
-        ProdukKasir("Espresso", 10000),
-        ProdukKasir("Cappuccino", 15000),
-        ProdukKasir("Coffee Latte", 15000),
-        ProdukKasir("Caramel Macchiato", 18000),
-        ProdukKasir("Es Kopi Susu", 18000),
+        ProdukKasir(
+            "Americano",
+            10000,
+            R.drawable.americano
+        ),
+
+        ProdukKasir(
+            "Espresso",
+            10000,
+            R.drawable.espresso
+        ),
+
+        ProdukKasir(
+            "Cappuccino",
+            15000,
+            R.drawable.cappucino
+        ),
+
+        ProdukKasir(
+            "Coffee Latte",
+            15000,
+            R.drawable.coffee_latte
+        ),
+
+        ProdukKasir(
+            "Caramel Macchiato",
+            18000,
+            R.drawable.caramel_macciato
+        ),
+
+        ProdukKasir(
+            "Es Kopi Susu",
+            18000,
+            R.drawable.es_kopisusu
+        ),
 
         // NON KOPI
-        ProdukKasir("Milk Tea", 10000),
-        ProdukKasir("Lemon Tea", 6000),
-        ProdukKasir("Coklat", 10000),
+        ProdukKasir(
+            "Milk Tea",
+            10000,
+            R.drawable.milk_tea
+        ),
+
+        ProdukKasir(
+            "Lemon Tea",
+            6000,
+            R.drawable.lemon_tea
+        ),
+
+        ProdukKasir(
+            "Chocolate",
+            10000,
+            R.drawable.chocolate
+        ),
 
         // CEMILAN
-        ProdukKasir("Oreo Lava Toast", 10000),
-        ProdukKasir("Chocolate Lava Toast", 10000),
-        ProdukKasir("Cheese Chocolate Lava Toast", 15000)
+        ProdukKasir(
+            "Oreo Lava Toast",
+            10000,
+            R.drawable.orea_lavatoast
+        ),
+
+        ProdukKasir(
+            "Chocolate Lava Toast",
+            10000,
+            R.drawable.chocolate_lavatoast
+        ),
+
+        ProdukKasir(
+            "Cheese Chocolate Lava Toast",
+            15000,
+            R.drawable.cheese_chocolate_lavatoast
+        )
 
     )
 
+    // ==========================
     // KERANJANG
+    // ==========================
     val keranjang = remember {
         mutableStateListOf<KeranjangItem>()
     }
 
-    // POPUP PEMBAYARAN
+    // ==========================
+    // DIALOG
+    // ==========================
     var showPembayaran by remember {
         mutableStateOf(false)
     }
 
-    // POPUP STRUK
     var showStruk by remember {
         mutableStateOf(false)
     }
 
+    // ==========================
     // NOMINAL BAYAR
+    // ==========================
     var uangBayar by remember {
         mutableStateOf("")
     }
 
+    // ==========================
     // TOTAL
+    // ==========================
     val totalHarga = keranjang.sumOf {
         it.harga * it.qty
     }
 
+    // ==========================
+    // CONTENT
+    // ==========================
     LazyColumn(
 
         modifier = Modifier
@@ -89,28 +173,41 @@ fun TransaksiPanel() {
 
     ) {
 
+        // ==========================
         // JUDUL
+        // ==========================
         item {
 
             Text(
+
                 text = "Transaksi Kasir",
+
                 fontSize = 24.sp,
+
                 fontWeight = FontWeight.Bold
+
             )
 
         }
 
+        // ==========================
         // DAFTAR MENU
+        // ==========================
         item {
 
             Text(
+
                 text = "Daftar Menu",
+
                 fontWeight = FontWeight.Bold
+
             )
 
         }
 
+        // ==========================
         // LIST PRODUK
+        // ==========================
         itemsIndexed(daftarProduk) { _, produk ->
 
             Card(
@@ -131,23 +228,63 @@ fun TransaksiPanel() {
 
                 ) {
 
-                    Column {
+                    // KIRI
+                    Row(
+                        verticalAlignment =
+                            Alignment.CenterVertically
+                    ) {
 
-                        Text(
-                            text = produk.nama,
-                            fontWeight = FontWeight.Bold
+                        // GAMBAR
+                        Image(
+
+                            painter =
+                                painterResource(
+                                    id = produk.gambar
+                                ),
+
+                            contentDescription =
+                                produk.nama,
+
+                            modifier = Modifier
+                                .size(90.dp)
+                                .clip(
+                                    RoundedCornerShape(12.dp)
+                                ),
+
+                            contentScale =
+                                ContentScale.Crop
+
                         )
 
                         Spacer(
-                            modifier = Modifier.height(4.dp)
+                            modifier = Modifier.width(12.dp)
                         )
 
-                        Text(
-                            text = "Rp ${produk.harga}"
-                        )
+                        // TEXT
+                        Column {
+
+                            Text(
+
+                                text = produk.nama,
+
+                                fontWeight =
+                                    FontWeight.Bold
+
+                            )
+
+                            Spacer(
+                                modifier = Modifier.height(4.dp)
+                            )
+
+                            Text(
+                                text = "Rp ${produk.harga}"
+                            )
+
+                        }
 
                     }
 
+                    // BUTTON TAMBAH
                     IconButton(
 
                         onClick = {
@@ -186,8 +323,11 @@ fun TransaksiPanel() {
                     ) {
 
                         Icon(
+
                             Icons.Outlined.AddShoppingCart,
+
                             contentDescription = null
+
                         )
 
                     }
@@ -198,7 +338,9 @@ fun TransaksiPanel() {
 
         }
 
-        // KERANJANG
+        // ==========================
+        // JUDUL KERANJANG
+        // ==========================
         item {
 
             Spacer(
@@ -206,14 +348,20 @@ fun TransaksiPanel() {
             )
 
             Text(
+
                 text = "Keranjang",
+
                 fontWeight = FontWeight.Bold,
+
                 fontSize = 18.sp
+
             )
 
         }
 
+        // ==========================
         // JIKA KOSONG
+        // ==========================
         if (keranjang.isEmpty()) {
 
             item {
@@ -226,7 +374,9 @@ fun TransaksiPanel() {
 
         } else {
 
+            // ==========================
             // LIST KERANJANG
+            // ==========================
             itemsIndexed(keranjang) { index, item ->
 
                 Card(
@@ -250,8 +400,12 @@ fun TransaksiPanel() {
                         Column {
 
                             Text(
+
                                 text = item.nama,
-                                fontWeight = FontWeight.Bold
+
+                                fontWeight =
+                                    FontWeight.Bold
+
                             )
 
                             Spacer(
@@ -267,11 +421,15 @@ fun TransaksiPanel() {
                             )
 
                             Text(
+
                                 text =
                                     "Subtotal: Rp ${item.harga * item.qty}",
 
                                 color =
-                                    MaterialTheme.colorScheme.primary
+                                    MaterialTheme
+                                        .colorScheme
+                                        .primary
+
                             )
 
                         }
@@ -305,16 +463,24 @@ fun TransaksiPanel() {
                             ) {
 
                                 Icon(
+
                                     Icons.Outlined.Remove,
+
                                     contentDescription = null
+
                                 )
 
                             }
 
                             Text(
+
                                 text = item.qty.toString(),
-                                fontWeight = FontWeight.Bold,
+
+                                fontWeight =
+                                    FontWeight.Bold,
+
                                 fontSize = 18.sp
+
                             )
 
                             // PLUS
@@ -332,8 +498,11 @@ fun TransaksiPanel() {
                             ) {
 
                                 Icon(
+
                                     Icons.Outlined.Add,
+
                                     contentDescription = null
+
                                 )
 
                             }
@@ -348,7 +517,9 @@ fun TransaksiPanel() {
 
         }
 
+        // ==========================
         // TOTAL
+        // ==========================
         item {
 
             Card(
@@ -367,18 +538,30 @@ fun TransaksiPanel() {
                 ) {
 
                     Text(
+
                         text = "Total",
-                        fontWeight = FontWeight.Bold,
+
+                        fontWeight =
+                            FontWeight.Bold,
+
                         fontSize = 18.sp
+
                     )
 
                     Text(
+
                         text = "Rp $totalHarga",
-                        fontWeight = FontWeight.Bold,
+
+                        fontWeight =
+                            FontWeight.Bold,
+
                         fontSize = 18.sp,
 
                         color =
-                            MaterialTheme.colorScheme.primary
+                            MaterialTheme
+                                .colorScheme
+                                .primary
+
                     )
 
                 }
@@ -387,7 +570,9 @@ fun TransaksiPanel() {
 
         }
 
-        // TOMBOL PEMBAYARAN
+        // ==========================
+        // BUTTON BAYAR
+        // ==========================
         item {
 
             Button(
@@ -405,8 +590,11 @@ fun TransaksiPanel() {
             ) {
 
                 Icon(
+
                     Icons.Outlined.Receipt,
+
                     contentDescription = null
+
                 )
 
                 Spacer(
@@ -431,20 +619,22 @@ fun TransaksiPanel() {
 
     }
 
+    // ==========================
     // DIALOG PEMBAYARAN
+    // ==========================
     if (showPembayaran) {
 
         AlertDialog(
 
             onDismissRequest = {
+
                 showPembayaran = false
+
             },
 
             title = {
 
-                Text(
-                    text = "Pembayaran"
-                )
+                Text("Pembayaran")
 
             },
 
@@ -453,8 +643,13 @@ fun TransaksiPanel() {
                 Column {
 
                     Text(
-                        text = "Total Bayar: Rp $totalHarga",
-                        fontWeight = FontWeight.Bold
+
+                        text =
+                            "Total Bayar: Rp $totalHarga",
+
+                        fontWeight =
+                            FontWeight.Bold
+
                     )
 
                     Spacer(
@@ -471,7 +666,9 @@ fun TransaksiPanel() {
 
                                 input
                                     .replace(".", "")
-                                    .filter { it.isDigit() }
+                                    .filter {
+                                        it.isDigit()
+                                    }
 
                             uangBayar =
 
@@ -492,14 +689,19 @@ fun TransaksiPanel() {
                         },
 
                         label = {
+
                             Text("Nominal Uang")
+
                         },
 
                         prefix = {
+
                             Text("Rp ")
+
                         },
 
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier =
+                            Modifier.fillMaxWidth(),
 
                         singleLine = true
 
@@ -558,7 +760,9 @@ fun TransaksiPanel() {
 
     }
 
+    // ==========================
     // STRUK
+    // ==========================
     if (showStruk) {
 
         val bayar =
@@ -573,14 +777,14 @@ fun TransaksiPanel() {
         AlertDialog(
 
             onDismissRequest = {
+
                 showStruk = false
+
             },
 
             title = {
 
-                Text(
-                    text = "Struk Pembayaran"
-                )
+                Text("Struk Pembayaran")
 
             },
 
@@ -594,7 +798,8 @@ fun TransaksiPanel() {
 
                         Row(
 
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier =
+                                Modifier.fillMaxWidth(),
 
                             horizontalArrangement =
                                 Arrangement.SpaceBetween
@@ -622,7 +827,8 @@ fun TransaksiPanel() {
                     // TOTAL
                     Row(
 
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier =
+                            Modifier.fillMaxWidth(),
 
                         horizontalArrangement =
                             Arrangement.SpaceBetween
@@ -630,13 +836,21 @@ fun TransaksiPanel() {
                     ) {
 
                         Text(
+
                             "TOTAL",
-                            fontWeight = FontWeight.Bold
+
+                            fontWeight =
+                                FontWeight.Bold
+
                         )
 
                         Text(
+
                             "Rp $totalHarga",
-                            fontWeight = FontWeight.Bold
+
+                            fontWeight =
+                                FontWeight.Bold
+
                         )
 
                     }
@@ -648,7 +862,8 @@ fun TransaksiPanel() {
                     // BAYAR
                     Row(
 
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier =
+                            Modifier.fillMaxWidth(),
 
                         horizontalArrangement =
                             Arrangement.SpaceBetween
@@ -664,7 +879,8 @@ fun TransaksiPanel() {
                     // KEMBALIAN
                     Row(
 
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier =
+                            Modifier.fillMaxWidth(),
 
                         horizontalArrangement =
                             Arrangement.SpaceBetween
@@ -672,13 +888,21 @@ fun TransaksiPanel() {
                     ) {
 
                         Text(
+
                             "Kembalian",
-                            fontWeight = FontWeight.Bold
+
+                            fontWeight =
+                                FontWeight.Bold
+
                         )
 
                         Text(
+
                             "Rp $kembalian",
-                            fontWeight = FontWeight.Bold
+
+                            fontWeight =
+                                FontWeight.Bold
+
                         )
 
                     }
@@ -702,6 +926,28 @@ fun TransaksiPanel() {
 
                     onClick = {
 
+                        // ==========================
+                        // MENU TERLARIS
+                        // ==========================
+                        val menuTerlarisItem =
+                            keranjang.maxByOrNull {
+                                it.qty
+                            }
+
+                        // ==========================
+                        // KIRIM DATA DASHBOARD
+                        // ==========================
+                        onTransaksiSelesai(
+
+                            totalHarga,
+
+                            menuTerlarisItem?.nama ?: "-",
+
+                            menuTerlarisItem?.qty ?: 0
+
+                        )
+
+                        // RESET
                         showStruk = false
 
                         keranjang.clear()
